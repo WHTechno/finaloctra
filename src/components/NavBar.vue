@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import { useWalletStore } from '../store'
+import { useWalletStore } from '../store/wallet'
 
 export default {
   setup() {

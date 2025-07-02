@@ -26,7 +26,7 @@
 
 <script>
 import { computed } from 'vue'
-import { useWalletStore } from '../store'
+import { useWalletStore } from '../store/wallet'
 import Spinner from './Spinner.vue'
 
 export default {

@@ -1,81 +1,96 @@
 <template>
   <div class="import-wallet">
     <h2>Import Wallet</h2>
-    
+
     <div class="tabs">
-      <button @click="activeTab = 'private'" :class="{active: activeTab === 'private'}">Private Key</button>
-      <button @click="activeTab = 'json'" :class="{active: activeTab === 'json'}">JSON File</button>
+      <button @click="activeTab = 'private'" :class="{ active: activeTab === 'private' }">Private Key</button>
+      <button @click="activeTab = 'json'" :class="{ active: activeTab === 'json' }">JSON File</button>
     </div>
-    
+
     <div v-if="activeTab === 'private'" class="tab-content">
       <textarea v-model="privateKey" placeholder="Enter your private key (base64)"></textarea>
       <button @click="importFromPrivateKey" :disabled="!privateKey">Import</button>
     </div>
-    
+
     <div v-else class="tab-content">
       <input type="file" @change="handleFileUpload" accept=".json">
       <button @click="importFromJson" :disabled="!jsonData">Import</button>
     </div>
-    
+
     <div v-if="error" class="error">{{ error }}</div>
   </div>
 </template>
 
 <script>
 import { ref } from 'vue'
-import { useWalletStore } from '../store'
-import { generateWallet } from '../services/wallet'
+import { useWalletStore } from '../store/wallet'
+import { useRouter } from 'vue-router'
 
 export default {
   setup() {
+    const router = useRouter()
     const wallet = useWalletStore()
     const activeTab = ref('private')
     const privateKey = ref('')
     const jsonData = ref(null)
     const error = ref(null)
-    
+
     const importFromPrivateKey = () => {
       try {
-        // In a real app, you would validate the private key
-        // and derive the address from it
-        const newWallet = generateWallet()
-        wallet.setWallet(newWallet.address)
-        // Normally you would store the private key securely
+        if (!privateKey.value.trim()) throw new Error('Private key is empty')
+
+        wallet.setWallet({
+          address: '', // derive address if needed
+          privateKey: privateKey.value.trim(),
+          publicKey: '',
+          rpc: 'https://octra.network'
+        })
+
+        error.value = null
+        router.push('/')
       } catch (err) {
-        error.value = 'Invalid private key'
+        error.value = err.message || 'Invalid private key'
       }
     }
-    
+
     const handleFileUpload = (event) => {
       const file = event.target.files[0]
       if (!file) return
-      
+
       const reader = new FileReader()
       reader.onload = (e) => {
         try {
-          jsonData.value = JSON.parse(e.target.result)
+          const json = JSON.parse(e.target.result)
+          jsonData.value = json
+          error.value = null
         } catch (err) {
           error.value = 'Invalid JSON file'
         }
       }
       reader.readAsText(file)
     }
-    
+
     const importFromJson = () => {
-      if (!jsonData.value) return
-      
       try {
-        if (!jsonData.value.address || !jsonData.value.priv) {
-          throw new Error('Invalid wallet format')
+        const data = jsonData.value
+        if (!data.priv || !data.addr || !data.rpc) {
+          throw new Error('Missing required fields in JSON')
         }
-        
-        wallet.setWallet(jsonData.value.address)
-        // Normally you would store the private key securely
+
+        wallet.setWallet({
+          address: data.addr,
+          privateKey: data.priv,
+          publicKey: '', // optional
+          rpc: data.rpc
+        })
+
+        error.value = null
+        router.push('/')
       } catch (err) {
-        error.value = err.message || 'Failed to import wallet'
+        error.value = err.message || 'Failed to import wallet from JSON'
       }
     }
-    
+
     return {
       activeTab,
       privateKey,
@@ -94,7 +109,7 @@ export default {
   background: white;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .tabs {

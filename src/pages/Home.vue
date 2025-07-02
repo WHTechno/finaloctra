@@ -2,7 +2,7 @@
   <div class="home">
     <BalanceCard />
     <TxHistory />
-    
+
     <div class="actions">
       <router-link to="/send" class="btn primary">Send OCT</router-link>
       <router-link to="/multisend" class="btn secondary">Multi-Send</router-link>
@@ -13,19 +13,21 @@
 <script>
 import BalanceCard from '../components/BalanceCard.vue'
 import TxHistory from '../components/TxHistory.vue'
-import { useWalletStore } from '../store'
+import { useWalletStore } from '../store/wallet'
 import { onMounted } from 'vue'
 
 export default {
   components: { BalanceCard, TxHistory },
   setup() {
     const wallet = useWalletStore()
-    
+
     onMounted(() => {
       if (wallet.address) {
         wallet.loadWalletData()
       }
     })
+
+    return { wallet }
   }
 }
 </script>

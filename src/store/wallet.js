@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import api from '../services/api'
+import { getBalance, getTxHistory } from '../services/api'
 
 export const useWalletStore = defineStore('wallet', {
   state: () => ({
@@ -25,20 +25,17 @@ export const useWalletStore = defineStore('wallet', {
   actions: {
     async loadWalletData() {
       if (!this.address) return
-      
+
       this.loading = true
       this.error = null
-      
+
       try {
-        // Fetch balance and nonce
-        const { balance, nonce } = await api.getBalance(this.address)
+        const { balance, nonce } = await getBalance(this.address) // ✅ perbaikan di sini
         this.balance = balance
         this.nonce = nonce
-        
-        // Fetch transaction history
-        this.transactions = await api.getTxHistory(this.address)
-        
-        // Persist data to localStorage
+
+        this.transactions = await getTxHistory(this.address) // ✅ perbaikan di sini
+
         localStorage.setItem('octra_balance', balance.toString())
         localStorage.setItem('octra_nonce', nonce.toString())
         localStorage.setItem('octra_transactions', JSON.stringify(this.transactions))
@@ -50,15 +47,17 @@ export const useWalletStore = defineStore('wallet', {
       }
     },
 
-    setWallet(walletData) {
-      this.address = walletData.address
-      this.privateKey = walletData.privateKey
-      this.publicKey = walletData.publicKey
-      
-      localStorage.setItem('octra_address', walletData.address)
-      localStorage.setItem('octra_private_key', walletData.privateKey)
-      localStorage.setItem('octra_public_key', walletData.publicKey)
-      
+    setWallet({ address, privateKey, publicKey = '', rpc }) {
+      this.address = address
+      this.privateKey = privateKey
+      this.publicKey = publicKey
+      this.network = rpc
+
+      localStorage.setItem('octra_address', address)
+      localStorage.setItem('octra_private_key', privateKey)
+      localStorage.setItem('octra_public_key', publicKey)
+      localStorage.setItem('octra_network', rpc)
+
       this.loadWalletData()
     },
 
@@ -69,19 +68,19 @@ export const useWalletStore = defineStore('wallet', {
       this.balance = 0
       this.nonce = 0
       this.transactions = []
-      
+
       localStorage.removeItem('octra_address')
       localStorage.removeItem('octra_private_key')
       localStorage.removeItem('octra_public_key')
       localStorage.removeItem('octra_balance')
       localStorage.removeItem('octra_nonce')
       localStorage.removeItem('octra_transactions')
+      localStorage.removeItem('octra_network')
     },
 
     setNetwork(networkUrl) {
       this.network = networkUrl
       localStorage.setItem('octra_network', networkUrl)
-      // You might want to update API base URL here
     }
   }
 })

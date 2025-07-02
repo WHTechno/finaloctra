@@ -77,7 +77,7 @@
 
 <script>
 import { ref, computed } from 'vue'
-import { useWalletStore } from '../store'
+import { useWalletStore } from '../store/wallet'
 import { generateWallet } from '../services/wallet'
 
 export default {

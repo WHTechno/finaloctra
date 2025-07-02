@@ -34,8 +34,8 @@
 
 <script>
 import { ref, computed } from 'vue'
-import { useWalletStore } from '../store'
-import api from '../services/api'
+import { useWalletStore } from '../store/wallet'
+import { sendTransaction } from '../services/api'
 
 export default {
   setup() {
