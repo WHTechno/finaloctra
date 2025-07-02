@@ -11,7 +11,9 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@noble/ed25519": "^2.3.0",
     "axios": "^1.6.7",
+    "bech32": "^2.0.0",
     "pinia": "^2.1.7",
     "tweetnacl": "^1.0.3",
     "vue": "^3.3.11",

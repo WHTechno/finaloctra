@@ -25,6 +25,7 @@
 import { ref } from 'vue'
 import { useWalletStore } from '../store/wallet'
 import { useRouter } from 'vue-router'
+import { deriveAddressFromPrivateKey } from '../utils/crypto' // ✅ Import fungsi baru
 
 export default {
   setup() {
@@ -35,14 +36,16 @@ export default {
     const jsonData = ref(null)
     const error = ref(null)
 
-    const importFromPrivateKey = () => {
+    const importFromPrivateKey = async () => {
       try {
         if (!privateKey.value.trim()) throw new Error('Private key is empty')
 
+        const address = await deriveAddressFromPrivateKey(privateKey.value.trim()) // ✅ Generate address
+
         wallet.setWallet({
-          address: '', // derive address if needed
+          address,
           privateKey: privateKey.value.trim(),
-          publicKey: '',
+          publicKey: '', // Optional
           rpc: 'https://octra.network'
         })
 
@@ -80,7 +83,7 @@ export default {
         wallet.setWallet({
           address: data.addr,
           privateKey: data.priv,
-          publicKey: '', // optional
+          publicKey: data.pub || '',
           rpc: data.rpc
         })
 
