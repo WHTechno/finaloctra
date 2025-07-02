@@ -39,7 +39,7 @@
 <script>
 import { ref, computed } from 'vue'
 import { useWalletStore } from '../store/wallet'
-import { sendTransaction } from '../services/api'
+import * as api from '../services/api'
 import { signTransaction } from '../services/wallet'
 
 export default {
@@ -74,16 +74,29 @@ export default {
       try {
         const txData = {
           from: wallet.address,
-          to: recipient.value,
+          to_: recipient.value,
           amount: (amount.value * 1_000_000).toString(), // Convert to μOCT
           nonce: wallet.nonce + 1,
-          timestamp: Date.now() / 1000,
-          message: message.value
+          timestamp: Math.floor(Date.now() / 1000),
+          ou: amount.value < 1000 ? "1" : "3"
+        }
+        if (message.value) {
+          txData.message = message.value
         }
         
-        // In a real app, you would sign the transaction here
-        // const signature = signTransaction(wallet.privateKey, txData)
-        // txData.signature = signature
+        // Debug privateKey length and value
+        console.log('PrivateKey length:', wallet.privateKey ? wallet.privateKey.length : 'null')
+        console.log('PrivateKey value:', wallet.privateKey)
+        // Validate privateKey size before signing
+        if (!wallet.privateKey || wallet.privateKey.length !== 88) { // base64 64 bytes = 88 chars
+          throw new Error('Invalid private key size')
+        }
+        // Sign transaction excluding message field
+        const signData = { ...txData }
+        delete signData.message
+        const signature = signTransaction(wallet.privateKey, signData)
+        txData.signature = signature
+        txData.public_key = wallet.publicKey
         
         const hash = await api.sendTransaction(txData)
         txHash.value = hash

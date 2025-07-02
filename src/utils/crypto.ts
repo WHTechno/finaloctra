@@ -1,26 +1,30 @@
 // src/utils/crypto.ts
+import * as buffer from 'buffer'
 import * as ed from '@noble/ed25519'
-import { bech32 } from 'bech32'
+import { sha512 } from '@noble/hashes/sha512'
+import { base58 } from '@scure/base'
+
+ed.etc.sha512Sync = sha512
 
 /**
- * Derive address from a base64-encoded private key
+ * Derive OCTRA address from a base64-encoded private key
+ * Address format: "oct" + Base58(SHA256(pubkey))
+ * 
  * @param {string} privKeyBase64 - Base64-encoded private key
- * @returns {Promise<string>} Bech32-encoded address with 'oct' prefix
+ * @returns {Promise<string>} Address with 'oct' prefix and Base58(pubkey hash)
  */
 export async function deriveAddressFromPrivateKey(privKeyBase64: string): Promise<string> {
-  const privKeyBytes = Uint8Array.from(Buffer.from(privKeyBase64, 'base64'))
+  const privKeyBytes = Uint8Array.from(buffer.Buffer.from(privKeyBase64, 'base64'))
 
-  // Get public key
+  // Derive public key from private key
   const pubKey = await ed.getPublicKey(privKeyBytes)
 
-  // SHA-256
+  // SHA-256 hash of public key
   const sha256 = await crypto.subtle.digest('SHA-256', pubKey)
+  const sha256Bytes = new Uint8Array(sha256)
 
-  // RIPEMD-160
-  const ripemd160 = await crypto.subtle.digest('RIPEMD-160', sha256)
-  const addressBytes = new Uint8Array(ripemd160)
+  // Encode to Base58 using scure base
+  const base58Encoded = base58.encode(sha256Bytes)
 
-  // Bech32 encode
-  const words = bech32.toWords(addressBytes)
-  return bech32.encode('oct', words)
+  return `oct${base58Encoded}`
 }

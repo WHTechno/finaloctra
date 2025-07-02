@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_URL = 'https://octra.network'
+const API_URL = '/api'
 
 /**
  * Fetch balance, nonce, and raw balance of a given address

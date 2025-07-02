@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
-
 export default defineConfig({
   plugins: [vue()],
   resolve: {
@@ -10,7 +9,15 @@ export default defineConfig({
     }
   },
   server: {
-    port: 8080
+    port: 8080,
+    allowedHosts: ['zscssr-8081.csb.app'],
+    proxy: {
+      '/api': {
+        target: 'https://octra.network',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   },
   build: {
     outDir: 'dist',

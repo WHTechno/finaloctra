@@ -26,6 +26,8 @@ import { ref } from 'vue'
 import { useWalletStore } from '../store/wallet'
 import { useRouter } from 'vue-router'
 import { deriveAddressFromPrivateKey } from '../utils/crypto' // ✅ Import fungsi baru
+import nacl from 'tweetnacl'
+import * as buffer from 'buffer'
 
 export default {
   setup() {
@@ -40,11 +42,14 @@ export default {
       try {
         if (!privateKey.value.trim()) throw new Error('Private key is empty')
 
-        const address = await deriveAddressFromPrivateKey(privateKey.value.trim()) // ✅ Generate address
+        const privKeyBytes = buffer.Buffer.from(privateKey.value.trim(), 'base64')
+        const keyPair = nacl.sign.keyPair.fromSeed(privKeyBytes.slice(0, 32))
+        const fullPrivateKey = buffer.Buffer.from(keyPair.secretKey).toString('base64')
+        const address = await deriveAddressFromPrivateKey(fullPrivateKey) // ✅ Generate address
 
         wallet.setWallet({
           address,
-          privateKey: privateKey.value.trim(),
+          privateKey: fullPrivateKey,
           publicKey: '', // Optional
           rpc: 'https://octra.network'
         })
